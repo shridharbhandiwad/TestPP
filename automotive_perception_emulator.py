@@ -7,7 +7,7 @@ to determine which functions would execute their main logic based on input value
 """
 
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import ttk, messagebox, scrolledtext, simpledialog
 import math
 import json
 from dataclasses import dataclass, field
@@ -142,7 +142,11 @@ class AutomotivePerceptionEmulator:
     """Main emulation class for automotive perception functions"""
     
     def __init__(self):
-        self.setup_gui()
+        self.root = tk.Tk()
+        self.root.title("Automotive Perception Function Emulator")
+        self.root.geometry("1200x800")
+        
+        # Data structures
         self.obj_data = ObjectData()
         self.ego_data = EgoVehicleData()
         self.params = Parameters()
@@ -150,15 +154,26 @@ class AutomotivePerceptionEmulator:
         self.is_mpc3_used = False
         self.dep_obj_probably_video_ghost = False
         
-    def setup_gui(self):
-        """Setup the GUI interface"""
-        self.root = tk.Tk()
-        self.root.title("Automotive Perception Function Emulator")
-        self.root.geometry("1200x800")
+        # Add interactive mode flag
+        self.interactive_mode = tk.BooleanVar(value=False)
         
-        # Create notebook for tabbed interface
-        self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # GUI components
+        self.obj_entries = {}
+        self.sensor_entries = {}
+        self.ego_entries = {}
+        self.results_text = None
+        
+        self.setup_gui()
+        
+    def setup_gui(self):
+        """Setup the main GUI"""
+        # Create main frame
+        main_frame = ttk.Frame(self.root)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Create notebook for tabs
+        self.notebook = ttk.Notebook(main_frame)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
         
         # Create tabs
         self.create_object_tab()
@@ -170,246 +185,228 @@ class AutomotivePerceptionEmulator:
         self.create_control_buttons()
         
     def create_object_tab(self):
-        """Create object parameters tab"""
+        """Create object data input tab"""
         self.obj_frame = ttk.Frame(self.notebook)
-        self.notebook.add(self.obj_frame, text="Object Parameters")
+        self.notebook.add(self.obj_frame, text="Object Data")
         
-        # Create scrollable frame
-        canvas = tk.Canvas(self.obj_frame)
-        scrollbar = ttk.Scrollbar(self.obj_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
-        
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        # Object state
-        state_frame = ttk.LabelFrame(scrollable_frame, text="Object State")
+        # Object state frame
+        state_frame = ttk.LabelFrame(self.obj_frame, text="Object State")
         state_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        self.obj_entries = {}
-        
-        # Position and velocity
+        # Position
         tk.Label(state_frame, text="Position X (m):").grid(row=0, column=0, sticky="w")
-        self.obj_entries['pos_x'] = tk.Entry(state_frame)
-        self.obj_entries['pos_x'].grid(row=0, column=1)
-        self.obj_entries['pos_x'].insert(0, "10.0")
+        self.obj_entries['pos_x'] = tk.Entry(state_frame, width=10)
+        self.obj_entries['pos_x'].grid(row=0, column=1, padx=5)
+        self.obj_entries['pos_x'].insert(0, "25.0")
         
         tk.Label(state_frame, text="Position Y (m):").grid(row=0, column=2, sticky="w")
-        self.obj_entries['pos_y'] = tk.Entry(state_frame)
-        self.obj_entries['pos_y'].grid(row=0, column=3)
-        self.obj_entries['pos_y'].insert(0, "0.0")
+        self.obj_entries['pos_y'] = tk.Entry(state_frame, width=10)
+        self.obj_entries['pos_y'].grid(row=0, column=3, padx=5)
+        self.obj_entries['pos_y'].insert(0, "1.5")
         
+        # Velocity
         tk.Label(state_frame, text="Velocity X (m/s):").grid(row=1, column=0, sticky="w")
-        self.obj_entries['vel_x'] = tk.Entry(state_frame)
-        self.obj_entries['vel_x'].grid(row=1, column=1)
-        self.obj_entries['vel_x'].insert(0, "0.0")
+        self.obj_entries['vel_x'] = tk.Entry(state_frame, width=10)
+        self.obj_entries['vel_x'].grid(row=1, column=1, padx=5)
+        self.obj_entries['vel_x'].insert(0, "0.5")
         
         tk.Label(state_frame, text="Velocity Y (m/s):").grid(row=1, column=2, sticky="w")
-        self.obj_entries['vel_y'] = tk.Entry(state_frame)
-        self.obj_entries['vel_y'].grid(row=1, column=3)
-        self.obj_entries['vel_y'].insert(0, "2.0")
+        self.obj_entries['vel_y'] = tk.Entry(state_frame, width=10)
+        self.obj_entries['vel_y'].grid(row=1, column=3, padx=5)
+        self.obj_entries['vel_y'].insert(0, "3.0")
         
-        # Object properties
-        props_frame = ttk.LabelFrame(scrollable_frame, text="Object Properties")
+        # Object properties frame
+        props_frame = ttk.LabelFrame(self.obj_frame, text="Object Properties")
         props_frame.pack(fill=tk.X, padx=5, pady=5)
         
+        # VRU flag
         tk.Label(props_frame, text="Is VRU:").grid(row=0, column=0, sticky="w")
         self.obj_entries['is_vru'] = tk.BooleanVar(value=True)
         tk.Checkbutton(props_frame, variable=self.obj_entries['is_vru']).grid(row=0, column=1)
         
+        # RCS
         tk.Label(props_frame, text="RCS (dBm²):").grid(row=0, column=2, sticky="w")
-        self.obj_entries['rcs'] = tk.Entry(props_frame)
-        self.obj_entries['rcs'].grid(row=0, column=3)
-        self.obj_entries['rcs'].insert(0, "-5.0")
+        self.obj_entries['rcs'] = tk.Entry(props_frame, width=10)
+        self.obj_entries['rcs'].grid(row=0, column=3, padx=5)
+        self.obj_entries['rcs'].insert(0, "-8.0")
         
-        tk.Label(props_frame, text="Num Cycles Existing:").grid(row=1, column=0, sticky="w")
-        self.obj_entries['num_cycles'] = tk.Entry(props_frame)
-        self.obj_entries['num_cycles'].grid(row=1, column=1)
-        self.obj_entries['num_cycles'].insert(0, "10")
+        # Number of cycles
+        tk.Label(props_frame, text="Cycles Existing:").grid(row=1, column=0, sticky="w")
+        self.obj_entries['num_cycles'] = tk.Entry(props_frame, width=10)
+        self.obj_entries['num_cycles'].grid(row=1, column=1, padx=5)
+        self.obj_entries['num_cycles'].insert(0, "8")
         
+        # Filter type
         tk.Label(props_frame, text="Filter Type:").grid(row=1, column=2, sticky="w")
-        self.obj_entries['filter_type'] = ttk.Combobox(props_frame, values=["LA", "WNJ"])
-        self.obj_entries['filter_type'].grid(row=1, column=3)
+        self.obj_entries['filter_type'] = ttk.Combobox(props_frame, values=["LA", "WNJ", "KF"], width=8)
+        self.obj_entries['filter_type'].grid(row=1, column=3, padx=5)
         self.obj_entries['filter_type'].set("LA")
         
-        # Probabilities
-        prob_frame = ttk.LabelFrame(scrollable_frame, text="Probabilities")
+        # Probabilities frame
+        prob_frame = ttk.LabelFrame(self.obj_frame, text="Probabilities")
         prob_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        tk.Label(prob_frame, text="Prob Has Been Observed Moving:").grid(row=0, column=0, sticky="w")
-        self.obj_entries['prob_has_been_moving'] = tk.Entry(prob_frame)
-        self.obj_entries['prob_has_been_moving'].grid(row=0, column=1)
-        self.obj_entries['prob_has_been_moving'].insert(0, "0.8")
+        tk.Label(prob_frame, text="Prob Has Been Moving:").grid(row=0, column=0, sticky="w")
+        self.obj_entries['prob_has_been_moving'] = tk.Entry(prob_frame, width=10)
+        self.obj_entries['prob_has_been_moving'].grid(row=0, column=1, padx=5)
+        self.obj_entries['prob_has_been_moving'].insert(0, "0.3")
         
-        tk.Label(prob_frame, text="Prob Is Currently Moving:").grid(row=0, column=2, sticky="w")
-        self.obj_entries['prob_currently_moving'] = tk.Entry(prob_frame)
-        self.obj_entries['prob_currently_moving'].grid(row=0, column=3)
-        self.obj_entries['prob_currently_moving'].insert(0, "0.7")
+        tk.Label(prob_frame, text="Prob Currently Moving:").grid(row=0, column=2, sticky="w")
+        self.obj_entries['prob_currently_moving'] = tk.Entry(prob_frame, width=10)
+        self.obj_entries['prob_currently_moving'].grid(row=0, column=3, padx=5)
+        self.obj_entries['prob_currently_moving'].insert(0, "0.2")
         
-        # Elevation
-        elev_frame = ttk.LabelFrame(scrollable_frame, text="Elevation")
+        # Elevation frame
+        elev_frame = ttk.LabelFrame(self.obj_frame, text="Elevation")
         elev_frame.pack(fill=tk.X, padx=5, pady=5)
         
         tk.Label(elev_frame, text="Elevation (m):").grid(row=0, column=0, sticky="w")
-        self.obj_entries['elevation'] = tk.Entry(elev_frame)
-        self.obj_entries['elevation'].grid(row=0, column=1)
+        self.obj_entries['elevation'] = tk.Entry(elev_frame, width=10)
+        self.obj_entries['elevation'].grid(row=0, column=1, padx=5)
         self.obj_entries['elevation'].insert(0, "0.0")
         
         tk.Label(elev_frame, text="Elevation Valid:").grid(row=0, column=2, sticky="w")
         self.obj_entries['elevation_valid'] = tk.BooleanVar(value=True)
         tk.Checkbutton(elev_frame, variable=self.obj_entries['elevation_valid']).grid(row=0, column=3)
         
-        # Innovation
-        innov_frame = ttk.LabelFrame(scrollable_frame, text="Innovation Data")
+        # Innovation frame
+        innov_frame = ttk.LabelFrame(self.obj_frame, text="Innovation")
         innov_frame.pack(fill=tk.X, padx=5, pady=5)
         
         tk.Label(innov_frame, text="Avg DX Innovation:").grid(row=0, column=0, sticky="w")
-        self.obj_entries['avg_dx_innovation'] = tk.Entry(innov_frame)
-        self.obj_entries['avg_dx_innovation'].grid(row=0, column=1)
+        self.obj_entries['avg_dx_innovation'] = tk.Entry(innov_frame, width=10)
+        self.obj_entries['avg_dx_innovation'].grid(row=0, column=1, padx=5)
         self.obj_entries['avg_dx_innovation'].insert(0, "0.5")
         
-        tk.Label(innov_frame, text="Radar Innovation [DR, Alpha]:").grid(row=1, column=0, sticky="w")
+        tk.Label(innov_frame, text="Radar Innov DR:").grid(row=0, column=2, sticky="w")
         self.obj_entries['radar_innovation_dr'] = tk.Entry(innov_frame, width=10)
-        self.obj_entries['radar_innovation_dr'].grid(row=1, column=1)
-        self.obj_entries['radar_innovation_dr'].insert(0, "1.0")
+        self.obj_entries['radar_innovation_dr'].grid(row=0, column=3, padx=5)
+        self.obj_entries['radar_innovation_dr'].insert(0, "0.0")
         
+        tk.Label(innov_frame, text="Radar Innov Alpha:").grid(row=1, column=0, sticky="w")
         self.obj_entries['radar_innovation_alpha'] = tk.Entry(innov_frame, width=10)
-        self.obj_entries['radar_innovation_alpha'].grid(row=1, column=2)
-        self.obj_entries['radar_innovation_alpha'].insert(0, "0.1")
+        self.obj_entries['radar_innovation_alpha'].grid(row=1, column=1, padx=5)
+        self.obj_entries['radar_innovation_alpha'].insert(0, "0.0")
         
-        tk.Label(innov_frame, text="Video Innovation [DR, Alpha]:").grid(row=2, column=0, sticky="w")
+        tk.Label(innov_frame, text="Video Innov DR:").grid(row=1, column=2, sticky="w")
         self.obj_entries['video_innovation_dr'] = tk.Entry(innov_frame, width=10)
-        self.obj_entries['video_innovation_dr'].grid(row=2, column=1)
-        self.obj_entries['video_innovation_dr'].insert(0, "0.8")
+        self.obj_entries['video_innovation_dr'].grid(row=1, column=3, padx=5)
+        self.obj_entries['video_innovation_dr'].insert(0, "0.0")
         
+        tk.Label(innov_frame, text="Video Innov Alpha:").grid(row=2, column=0, sticky="w")
         self.obj_entries['video_innovation_alpha'] = tk.Entry(innov_frame, width=10)
-        self.obj_entries['video_innovation_alpha'].grid(row=2, column=2)
-        self.obj_entries['video_innovation_alpha'].insert(0, "0.05")
+        self.obj_entries['video_innovation_alpha'].grid(row=2, column=1, padx=5)
+        self.obj_entries['video_innovation_alpha'].insert(0, "0.0")
         
-        # Micro doppler
-        micro_frame = ttk.LabelFrame(scrollable_frame, text="Micro Doppler")
+        # Micro doppler frame
+        micro_frame = ttk.LabelFrame(self.obj_frame, text="Micro Doppler")
         micro_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        tk.Label(micro_frame, text="Number Micro Doppler Cycles:").grid(row=0, column=0, sticky="w")
-        self.obj_entries['micro_doppler_cycles'] = tk.Entry(micro_frame)
-        self.obj_entries['micro_doppler_cycles'].grid(row=0, column=1)
+        tk.Label(micro_frame, text="Micro Doppler Cycles:").grid(row=0, column=0, sticky="w")
+        self.obj_entries['micro_doppler_cycles'] = tk.Entry(micro_frame, width=10)
+        self.obj_entries['micro_doppler_cycles'].grid(row=0, column=1, padx=5)
         self.obj_entries['micro_doppler_cycles'].insert(0, "0")
         
-        tk.Label(micro_frame, text="Expected VR High Enough Counter:").grid(row=0, column=2, sticky="w")
-        self.obj_entries['expected_vr_counter'] = tk.Entry(micro_frame)
-        self.obj_entries['expected_vr_counter'].grid(row=0, column=3)
-        self.obj_entries['expected_vr_counter'].insert(0, "3")
-        
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        tk.Label(micro_frame, text="Expected VR Counter:").grid(row=0, column=2, sticky="w")
+        self.obj_entries['expected_vr_counter'] = tk.Entry(micro_frame, width=10)
+        self.obj_entries['expected_vr_counter'].grid(row=0, column=3, padx=5)
+        self.obj_entries['expected_vr_counter'].insert(0, "5")
         
     def create_sensor_tab(self):
-        """Create sensor data tab"""
+        """Create sensor data input tab"""
         self.sensor_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.sensor_frame, text="Sensor Data")
         
-        # Sensor updates
+        # Sensor updates frame
         updates_frame = ttk.LabelFrame(self.sensor_frame, text="Sensor Updates")
         updates_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        self.sensor_entries = {}
-        
         tk.Label(updates_frame, text="Total Radar Updates:").grid(row=0, column=0, sticky="w")
-        self.sensor_entries['total_radar_updates'] = tk.Entry(updates_frame)
-        self.sensor_entries['total_radar_updates'].grid(row=0, column=1)
+        self.sensor_entries['total_radar_updates'] = tk.Entry(updates_frame, width=10)
+        self.sensor_entries['total_radar_updates'].grid(row=0, column=1, padx=5)
         self.sensor_entries['total_radar_updates'].insert(0, "5")
         
         tk.Label(updates_frame, text="Total Video Updates:").grid(row=0, column=2, sticky="w")
-        self.sensor_entries['total_video_updates'] = tk.Entry(updates_frame)
-        self.sensor_entries['total_video_updates'].grid(row=0, column=3)
-        self.sensor_entries['total_video_updates'].insert(0, "8")
+        self.sensor_entries['total_video_updates'] = tk.Entry(updates_frame, width=10)
+        self.sensor_entries['total_video_updates'].grid(row=0, column=3, padx=5)
+        self.sensor_entries['total_video_updates'].insert(0, "3")
         
-        tk.Label(updates_frame, text="Front Center Location Radar Updates:").grid(row=1, column=0, sticky="w")
-        self.sensor_entries['fc_location_radar_updates'] = tk.Entry(updates_frame)
-        self.sensor_entries['fc_location_radar_updates'].grid(row=1, column=1)
+        tk.Label(updates_frame, text="FC Location Radar Updates:").grid(row=1, column=0, sticky="w")
+        self.sensor_entries['fc_location_radar_updates'] = tk.Entry(updates_frame, width=10)
+        self.sensor_entries['fc_location_radar_updates'].grid(row=1, column=1, padx=5)
         self.sensor_entries['fc_location_radar_updates'].insert(0, "5")
         
-        tk.Label(updates_frame, text="Front Left Corner Radar Updates:").grid(row=1, column=2, sticky="w")
-        self.sensor_entries['fl_corner_updates'] = tk.Entry(updates_frame)
-        self.sensor_entries['fl_corner_updates'].grid(row=1, column=3)
+        tk.Label(updates_frame, text="FL Corner Updates:").grid(row=1, column=2, sticky="w")
+        self.sensor_entries['fl_corner_updates'] = tk.Entry(updates_frame, width=10)
+        self.sensor_entries['fl_corner_updates'].grid(row=1, column=3, padx=5)
         self.sensor_entries['fl_corner_updates'].insert(0, "0")
         
-        tk.Label(updates_frame, text="Front Right Corner Radar Updates:").grid(row=2, column=0, sticky="w")
-        self.sensor_entries['fr_corner_updates'] = tk.Entry(updates_frame)
-        self.sensor_entries['fr_corner_updates'].grid(row=2, column=1)
+        tk.Label(updates_frame, text="FR Corner Updates:").grid(row=2, column=0, sticky="w")
+        self.sensor_entries['fr_corner_updates'] = tk.Entry(updates_frame, width=10)
+        self.sensor_entries['fr_corner_updates'].grid(row=2, column=1, padx=5)
         self.sensor_entries['fr_corner_updates'].insert(0, "0")
         
-        # Updates since last
-        since_frame = ttk.LabelFrame(self.sensor_frame, text="Updates Since Last")
-        since_frame.pack(fill=tk.X, padx=5, pady=5)
+        tk.Label(updates_frame, text="Since Last Video:").grid(row=2, column=2, sticky="w")
+        self.sensor_entries['since_last_video'] = tk.Entry(updates_frame, width=10)
+        self.sensor_entries['since_last_video'].grid(row=2, column=3, padx=5)
+        self.sensor_entries['since_last_video'].insert(0, "2")
         
-        tk.Label(since_frame, text="Since Last Video Update:").grid(row=0, column=0, sticky="w")
-        self.sensor_entries['since_last_video'] = tk.Entry(since_frame)
-        self.sensor_entries['since_last_video'].grid(row=0, column=1)
-        self.sensor_entries['since_last_video'].insert(0, "0")
-        
-        tk.Label(since_frame, text="Since Last Radar Update:").grid(row=0, column=2, sticky="w")
-        self.sensor_entries['since_last_radar'] = tk.Entry(since_frame)
-        self.sensor_entries['since_last_radar'].grid(row=0, column=3)
+        tk.Label(updates_frame, text="Since Last Radar:").grid(row=3, column=0, sticky="w")
+        self.sensor_entries['since_last_radar'] = tk.Entry(updates_frame, width=10)
+        self.sensor_entries['since_last_radar'].grid(row=3, column=1, padx=5)
         self.sensor_entries['since_last_radar'].insert(0, "0")
         
-        # Quality flags
+        # Quality flags frame
         quality_frame = ttk.LabelFrame(self.sensor_frame, text="Quality Flags")
         quality_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        tk.Label(quality_frame, text="Is Good Quality Fused:").grid(row=0, column=0, sticky="w")
+        tk.Label(quality_frame, text="Good Quality Fused:").grid(row=0, column=0, sticky="w")
         self.sensor_entries['good_quality_fused'] = tk.BooleanVar(value=True)
         tk.Checkbutton(quality_frame, variable=self.sensor_entries['good_quality_fused']).grid(row=0, column=1)
         
-        tk.Label(quality_frame, text="Is Trustworthy Object:").grid(row=0, column=2, sticky="w")
+        tk.Label(quality_frame, text="Trustworthy Object:").grid(row=0, column=2, sticky="w")
         self.sensor_entries['trustworthy_object'] = tk.BooleanVar(value=True)
         tk.Checkbutton(quality_frame, variable=self.sensor_entries['trustworthy_object']).grid(row=0, column=3)
         
     def create_ego_tab(self):
-        """Create ego vehicle data tab"""
+        """Create ego vehicle data input tab"""
         self.ego_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.ego_frame, text="Ego Vehicle")
         
-        ego_motion_frame = ttk.LabelFrame(self.ego_frame, text="Ego Vehicle Motion")
-        ego_motion_frame.pack(fill=tk.X, padx=5, pady=5)
+        # Ego motion frame
+        motion_frame = ttk.LabelFrame(self.ego_frame, text="Ego Motion")
+        motion_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        self.ego_entries = {}
+        tk.Label(motion_frame, text="Velocity X (m/s):").grid(row=0, column=0, sticky="w")
+        self.ego_entries['velocity_x'] = tk.Entry(motion_frame, width=10)
+        self.ego_entries['velocity_x'].grid(row=0, column=1, padx=5)
+        self.ego_entries['velocity_x'].insert(0, "13.9")
         
-        tk.Label(ego_motion_frame, text="Velocity X (m/s):").grid(row=0, column=0, sticky="w")
-        self.ego_entries['velocity_x'] = tk.Entry(ego_motion_frame)
-        self.ego_entries['velocity_x'].grid(row=0, column=1)
-        self.ego_entries['velocity_x'].insert(0, "15.0")
+        tk.Label(motion_frame, text="Acceleration Y (m/s²):").grid(row=0, column=2, sticky="w")
+        self.ego_entries['acceleration_y'] = tk.Entry(motion_frame, width=10)
+        self.ego_entries['acceleration_y'].grid(row=0, column=3, padx=5)
+        self.ego_entries['acceleration_y'].insert(0, "0.0")
         
-        tk.Label(ego_motion_frame, text="Acceleration Y (m/s²):").grid(row=0, column=2, sticky="w")
-        self.ego_entries['acceleration_y'] = tk.Entry(ego_motion_frame)
-        self.ego_entries['acceleration_y'].grid(row=0, column=3)
-        self.ego_entries['acceleration_y'].insert(0, "0.1")
+        tk.Label(motion_frame, text="Yaw Rate (rad/s):").grid(row=1, column=0, sticky="w")
+        self.ego_entries['yaw_rate'] = tk.Entry(motion_frame, width=10)
+        self.ego_entries['yaw_rate'].grid(row=1, column=1, padx=5)
+        self.ego_entries['yaw_rate'].insert(0, "0.0")
         
-        tk.Label(ego_motion_frame, text="Yaw Rate (rad/s):").grid(row=1, column=0, sticky="w")
-        self.ego_entries['yaw_rate'] = tk.Entry(ego_motion_frame)
-        self.ego_entries['yaw_rate'].grid(row=1, column=1)
-        self.ego_entries['yaw_rate'].insert(0, "0.05")
-        
-        # Absolute velocity over ground
+        # Absolute velocity frame
         abs_vel_frame = ttk.LabelFrame(self.ego_frame, text="Absolute Velocity Over Ground")
         abs_vel_frame.pack(fill=tk.X, padx=5, pady=5)
         
         tk.Label(abs_vel_frame, text="Abs Vel X (m/s):").grid(row=0, column=0, sticky="w")
-        self.ego_entries['abs_vel_x'] = tk.Entry(abs_vel_frame)
-        self.ego_entries['abs_vel_x'].grid(row=0, column=1)
-        self.ego_entries['abs_vel_x'].insert(0, "1.0")
+        self.ego_entries['abs_vel_x'] = tk.Entry(abs_vel_frame, width=10)
+        self.ego_entries['abs_vel_x'].grid(row=0, column=1, padx=5)
+        self.ego_entries['abs_vel_x'].insert(0, "0.5")
         
         tk.Label(abs_vel_frame, text="Abs Vel Y (m/s):").grid(row=0, column=2, sticky="w")
-        self.ego_entries['abs_vel_y'] = tk.Entry(abs_vel_frame)
-        self.ego_entries['abs_vel_y'].grid(row=0, column=3)
-        self.ego_entries['abs_vel_y'].insert(0, "2.0")
+        self.ego_entries['abs_vel_y'] = tk.Entry(abs_vel_frame, width=10)
+        self.ego_entries['abs_vel_y'].grid(row=0, column=3, padx=5)
+        self.ego_entries['abs_vel_y'].insert(0, "3.0")
         
-        # Additional flags
+        # Additional flags frame
         flags_frame = ttk.LabelFrame(self.ego_frame, text="Additional Flags")
         flags_frame.pack(fill=tk.X, padx=5, pady=5)
         
@@ -431,13 +428,130 @@ class AutomotivePerceptionEmulator:
         control_frame = ttk.Frame(self.root)
         control_frame.pack(fill=tk.X, padx=10, pady=5)
         
+        # Interactive mode checkbox
+        tk.Checkbutton(control_frame, text="Interactive Input Mode", variable=self.interactive_mode).pack(side=tk.LEFT, padx=5)
+        
         ttk.Button(control_frame, text="Evaluate Functions", command=self.evaluate_functions).pack(side=tk.LEFT, padx=5)
         ttk.Button(control_frame, text="Load Example", command=self.load_example).pack(side=tk.LEFT, padx=5)
         ttk.Button(control_frame, text="Save Config", command=self.save_config).pack(side=tk.LEFT, padx=5)
         ttk.Button(control_frame, text="Load Config", command=self.load_config).pack(side=tk.LEFT, padx=5)
         ttk.Button(control_frame, text="Clear Results", command=self.clear_results).pack(side=tk.LEFT, padx=5)
+    
+    def get_interactive_input(self, field_name, description, field_type, default_value=None):
+        """Get interactive input for a specific field"""
+        prompt = f"Enter {description}:"
+        if default_value is not None:
+            prompt += f" (default: {default_value})"
+        
+        if field_type == "bool":
+            result = messagebox.askyesno("Interactive Input", prompt)
+            return result
+        elif field_type == "int":
+            while True:
+                try:
+                    value = simpledialog.askstring("Interactive Input", prompt)
+                    if value is None:  # User cancelled
+                        return default_value if default_value is not None else 0
+                    if value == "" and default_value is not None:
+                        return default_value
+                    return int(value)
+                except ValueError:
+                    messagebox.showerror("Error", "Please enter a valid integer.")
+        elif field_type == "float":
+            while True:
+                try:
+                    value = simpledialog.askstring("Interactive Input", prompt)
+                    if value is None:  # User cancelled
+                        return default_value if default_value is not None else 0.0
+                    if value == "" and default_value is not None:
+                        return default_value
+                    return float(value)
+                except ValueError:
+                    messagebox.showerror("Error", "Please enter a valid number.")
+        elif field_type == "str":
+            value = simpledialog.askstring("Interactive Input", prompt)
+            if value is None or value == "":
+                return default_value if default_value is not None else ""
+            return value
+        
+    def get_input_values_interactive(self):
+        """Get all input values through interactive prompts"""
+        try:
+            # Object state
+            self.obj_data.state.x = self.get_interactive_input("pos_x", "Object Position X (m)", "float", 25.0)
+            self.obj_data.state.y = self.get_interactive_input("pos_y", "Object Position Y (m)", "float", 1.5)
+            self.obj_data.state.vx = self.get_interactive_input("vel_x", "Object Velocity X (m/s)", "float", 0.5)
+            self.obj_data.state.vy = self.get_interactive_input("vel_y", "Object Velocity Y (m/s)", "float", 3.0)
+            
+            # Object properties
+            self.obj_data.is_object_vru = self.get_interactive_input("is_vru", "Is Object VRU?", "bool", True)
+            self.obj_data.rcs = self.get_interactive_input("rcs", "RCS (dBm²)", "float", -8.0)
+            self.obj_data.num_cycles_existing = self.get_interactive_input("num_cycles", "Number of Cycles Existing", "int", 8)
+            self.obj_data.filter_type = self.get_interactive_input("filter_type", "Filter Type (LA/WNJ/KF)", "str", "LA")
+            
+            # Probabilities
+            self.obj_data.prob_has_been_observed_moving = self.get_interactive_input("prob_has_been_moving", "Probability Has Been Observed Moving (0-1)", "float", 0.3)
+            self.obj_data.prob_is_currently_moving = self.get_interactive_input("prob_currently_moving", "Probability Is Currently Moving (0-1)", "float", 0.2)
+            
+            # Elevation
+            self.obj_data.elevation = self.get_interactive_input("elevation", "Elevation (m)", "float", 0.0)
+            self.obj_data.elevation_is_valid = self.get_interactive_input("elevation_valid", "Is Elevation Valid?", "bool", True)
+            
+            # Innovation
+            self.obj_data.avg_dx_innovation = self.get_interactive_input("avg_dx_innovation", "Average DX Innovation", "float", 0.5)
+            self.obj_data.radar_based_innovation[0] = self.get_interactive_input("radar_innovation_dr", "Radar Innovation DR", "float", 0.0)
+            self.obj_data.radar_based_innovation[1] = self.get_interactive_input("radar_innovation_alpha", "Radar Innovation Alpha", "float", 0.0)
+            self.obj_data.video_based_innovation[0] = self.get_interactive_input("video_innovation_dr", "Video Innovation DR", "float", 0.0)
+            self.obj_data.video_based_innovation[1] = self.get_interactive_input("video_innovation_alpha", "Video Innovation Alpha", "float", 0.0)
+            
+            # Micro doppler
+            self.obj_data.number_micro_doppler_cycles = self.get_interactive_input("micro_doppler_cycles", "Number of Micro Doppler Cycles", "int", 0)
+            self.obj_data.expected_vr_high_enough_for_mu_doppler_counter = self.get_interactive_input("expected_vr_counter", "Expected VR High Enough Counter", "int", 5)
+            
+            # Sensor data
+            self.obj_data.sensor_filter_fus_helper.total_num_radar_updates = self.get_interactive_input("total_radar_updates", "Total Number of Radar Updates", "int", 5)
+            self.obj_data.sensor_filter_fus_helper.total_num_video_updates = self.get_interactive_input("total_video_updates", "Total Number of Video Updates", "int", 3)
+            self.obj_data.sensor_filter_fus_helper.total_num_front_center_location_radar_updates = self.get_interactive_input("fc_location_radar_updates", "Front Center Location Radar Updates", "int", 5)
+            self.obj_data.sensor_filter_fus_helper.total_num_front_left_corner_updates = self.get_interactive_input("fl_corner_updates", "Front Left Corner Updates", "int", 0)
+            self.obj_data.sensor_filter_fus_helper.total_num_front_right_corner_updates = self.get_interactive_input("fr_corner_updates", "Front Right Corner Updates", "int", 0)
+            self.obj_data.sensor_filter_fus_helper.updates_since_last_video_update = self.get_interactive_input("since_last_video", "Updates Since Last Video", "int", 2)
+            self.obj_data.sensor_filter_fus_helper.updates_since_last_radar_update = self.get_interactive_input("since_last_radar", "Updates Since Last Radar", "int", 0)
+            self.obj_data.sensor_filter_fus_helper.is_good_quality_fused_object = self.get_interactive_input("good_quality_fused", "Is Good Quality Fused Object?", "bool", True)
+            self.obj_data.sensor_filter_fus_helper.is_trustworthy_object = self.get_interactive_input("trustworthy_object", "Is Trustworthy Object?", "bool", True)
+            
+            # Ego data
+            self.ego_data.velocity_x = self.get_interactive_input("velocity_x", "Ego Velocity X (m/s)", "float", 13.9)
+            self.ego_data.acceleration_y = self.get_interactive_input("acceleration_y", "Ego Acceleration Y (m/s²)", "float", 0.0)
+            self.ego_data.yaw_rate = self.get_interactive_input("yaw_rate", "Ego Yaw Rate (rad/s)", "float", 0.0)
+            
+            # Absolute velocity over ground
+            self.abs_vel_over_ground[0] = self.get_interactive_input("abs_vel_x", "Absolute Velocity X (m/s)", "float", 0.5)
+            self.abs_vel_over_ground[1] = self.get_interactive_input("abs_vel_y", "Absolute Velocity Y (m/s)", "float", 3.0)
+            
+            # Additional flags
+            self.is_mpc3_used = self.get_interactive_input("is_mpc3_used", "Is MPC3 Used?", "bool", False)
+            
+            # Set some default values for fields not commonly used
+            self.obj_data.total_num_cycles_with_oncoming_locations = 0
+            self.obj_data.vy_unreliable_accumulated = 0.0
+            self.obj_data.video_inv_ttc = 0.0
+            self.obj_data.is_suppressed_until_next_video_update = False
+            self.obj_data.is_suppressed_due_to_video_otc_post_processing = False
+            self.obj_data.is_updated_with_stat_loc_with_high_mdoppler_with_outgoing_vr = False
+            
+            return True
+        except Exception as e:
+            messagebox.showerror("Input Error", f"Error getting interactive input: {e}")
+            return False
         
     def get_input_values(self):
+        """Extract all input values from GUI or interactive input"""
+        if self.interactive_mode.get():
+            return self.get_input_values_interactive()
+        else:
+            return self.get_input_values_from_gui()
+    
+    def get_input_values_from_gui(self):
         """Extract all input values from GUI"""
         try:
             # Object state
@@ -494,6 +608,14 @@ class AutomotivePerceptionEmulator:
             # Additional flags
             self.is_mpc3_used = self.ego_entries['is_mpc3_used'].get()
             
+            # Set some default values for fields not exposed in GUI
+            self.obj_data.total_num_cycles_with_oncoming_locations = 0
+            self.obj_data.vy_unreliable_accumulated = 0.0
+            self.obj_data.video_inv_ttc = 0.0
+            self.obj_data.is_suppressed_until_next_video_update = False
+            self.obj_data.is_suppressed_due_to_video_otc_post_processing = False
+            self.obj_data.is_updated_with_stat_loc_with_high_mdoppler_with_outgoing_vr = False
+            
             return True
         except ValueError as e:
             messagebox.showerror("Input Error", f"Invalid input value: {e}")
@@ -541,6 +663,10 @@ class AutomotivePerceptionEmulator:
             
         self.clear_results()
         results = []
+        
+        # Display input mode
+        input_mode = "Interactive Input Mode" if self.interactive_mode.get() else "GUI Input Mode"
+        self.results_text.insert(tk.END, f"=== AUTOMOTIVE PERCEPTION FUNCTION EVALUATION RESULTS ({input_mode}) ===\n\n")
         
         # Pre-calculate common values
         self.dep_obj_probably_video_ghost = self.is_dep_obj_probably_video_ghost()
@@ -771,8 +897,6 @@ class AutomotivePerceptionEmulator:
             results.append("✗ applyRadarOnlyStationaryCheck - Object is not radar-only")
         
         # Display results
-        self.results_text.delete(1.0, tk.END)
-        self.results_text.insert(tk.END, "=== AUTOMOTIVE PERCEPTION FUNCTION EVALUATION RESULTS ===\n\n")
         self.results_text.insert(tk.END, f"Object Type: {'VRU' if self.obj_data.is_object_vru else 'Non-VRU'}\n")
         self.results_text.insert(tk.END, f"Position: ({self.obj_data.state.x:.2f}, {self.obj_data.state.y:.2f}) m\n")
         self.results_text.insert(tk.END, f"Velocity: ({self.obj_data.state.vx:.2f}, {self.obj_data.state.vy:.2f}) m/s\n")
