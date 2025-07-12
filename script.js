@@ -61,11 +61,15 @@ const functions = [
             { name: "probIsCurrentlyMoving", type: "number", label: "Probability Is Currently Moving (0-1)" },
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
             { name: "absVelOverGround", type: "number", label: "Absolute Velocity Over Ground" },
-            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" }
+            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
+            { name: "probHasBeenObservedMovingThreshold", type: "number", label: "Prob Has Been Observed Moving Threshold", defaultValue: 0.3 },
+            { name: "probIsCurrentlyMovingThreshold", type: "number", label: "Prob Is Currently Moving Threshold", defaultValue: 0.2 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 10 },
+            { name: "absVelOverGroundThreshold", type: "number", label: "Abs Vel Over Ground Threshold", defaultValue: 2.0 }
         ],
         condition: (inputs) => {
-            const { probHasBeenObservedMoving, probIsCurrentlyMoving, numCyclesExisting, absVelOverGround, isObjectVru } = inputs;
-            return probHasBeenObservedMoving < 0.3 && probIsCurrentlyMoving < 0.2 && numCyclesExisting > 10 && absVelOverGround > 2.0 && !isObjectVru;
+            const { probHasBeenObservedMoving, probIsCurrentlyMoving, numCyclesExisting, absVelOverGround, isObjectVru, probHasBeenObservedMovingThreshold, probIsCurrentlyMovingThreshold, numCyclesExistingThreshold, absVelOverGroundThreshold } = inputs;
+            return probHasBeenObservedMoving < probHasBeenObservedMovingThreshold && probIsCurrentlyMoving < probIsCurrentlyMovingThreshold && numCyclesExisting > numCyclesExistingThreshold && absVelOverGround > absVelOverGroundThreshold && !isObjectVru;
         },
         action: "Disqualifies for AEB or VY-dependent functions"
     },
@@ -78,11 +82,14 @@ const functions = [
             { name: "absVelOverGroundX", type: "number", label: "Absolute Velocity Over Ground X" },
             { name: "absVelOverGroundY", type: "number", label: "Absolute Velocity Over Ground Y" },
             { name: "stateY", type: "number", label: "State Y Position" },
-            { name: "isUpdatedWithStatLocWithHighMD", type: "boolean", label: "Is Updated With Stat Loc With High MD?" }
+            { name: "isUpdatedWithStatLocWithHighMD", type: "boolean", label: "Is Updated With Stat Loc With High MD?" },
+            { name: "absVelOverGroundXThreshold", type: "number", label: "Abs Vel Over Ground X Threshold", defaultValue: 0.2 },
+            { name: "absVelOverGroundYThreshold", type: "number", label: "Abs Vel Over Ground Y Threshold", defaultValue: 1.0 },
+            { name: "stateYThreshold", type: "number", label: "State Y Position Threshold", defaultValue: 0.5 }
         ],
         condition: (inputs) => {
-            const { isObjectVru, absVelOverGroundX, absVelOverGroundY, stateY, isUpdatedWithStatLocWithHighMD } = inputs;
-            return isObjectVru && absVelOverGroundX < 0.2 && absVelOverGroundY > 1.0 && Math.abs(stateY) < 0.5 && isUpdatedWithStatLocWithHighMD;
+            const { isObjectVru, absVelOverGroundX, absVelOverGroundY, stateY, isUpdatedWithStatLocWithHighMD, absVelOverGroundXThreshold, absVelOverGroundYThreshold, stateYThreshold } = inputs;
+            return isObjectVru && absVelOverGroundX < absVelOverGroundXThreshold && absVelOverGroundY > absVelOverGroundYThreshold && Math.abs(stateY) < stateYThreshold && isUpdatedWithStatLocWithHighMD;
         },
         action: "Disqualifies for AEB"
     },
@@ -94,12 +101,14 @@ const functions = [
             { name: "absVelOverGround", type: "number", label: "Absolute Velocity Over Ground" },
             { name: "filterType", type: "select", label: "Filter Type", options: ["CA", "CV", "LA"] },
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
-            { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" }
+            { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" },
+            { name: "absVelOverGroundThreshold", type: "number", label: "Abs Vel Over Ground Threshold", defaultValue: 5.0 },
+            { name: "measurementRatioThreshold", type: "number", label: "Measurement Ratio Threshold", defaultValue: 0.3 }
         ],
         condition: (inputs) => {
-            const { absVelOverGround, filterType, numCyclesExisting, totalNumSensorUpdates } = inputs;
+            const { absVelOverGround, filterType, numCyclesExisting, totalNumSensorUpdates, absVelOverGroundThreshold, measurementRatioThreshold } = inputs;
             const measurementRatio = totalNumSensorUpdates / numCyclesExisting;
-            return absVelOverGround > 5.0 && filterType === "CA" && measurementRatio < 0.3;
+            return absVelOverGround > absVelOverGroundThreshold && filterType === "CA" && measurementRatio < measurementRatioThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -111,11 +120,14 @@ const functions = [
             { name: "isOnlyUpdatedBySensorX", type: "boolean", label: "Is Only Updated By Sensor X?" },
             { name: "avgDxInnovation", type: "number", label: "Average Dx Innovation" },
             { name: "rcs", type: "number", label: "RCS (Radar Cross Section)" },
-            { name: "pNonObstacleRCS", type: "number", label: "P Non-Obstacle RCS (0-1)" }
+            { name: "pNonObstacleRCS", type: "number", label: "P Non-Obstacle RCS (0-1)" },
+            { name: "avgDxInnovationThreshold", type: "number", label: "Avg Dx Innovation Threshold", defaultValue: 2.0 },
+            { name: "rcsThreshold", type: "number", label: "RCS Threshold", defaultValue: -15 },
+            { name: "pNonObstacleRCSThreshold", type: "number", label: "P Non-Obstacle RCS Threshold", defaultValue: 0.7 }
         ],
         condition: (inputs) => {
-            const { isOnlyUpdatedBySensorX, avgDxInnovation, rcs, pNonObstacleRCS } = inputs;
-            return isOnlyUpdatedBySensorX && avgDxInnovation > 2.0 && rcs < -15 && pNonObstacleRCS > 0.7;
+            const { isOnlyUpdatedBySensorX, avgDxInnovation, rcs, pNonObstacleRCS, avgDxInnovationThreshold, rcsThreshold, pNonObstacleRCSThreshold } = inputs;
+            return isOnlyUpdatedBySensorX && avgDxInnovation > avgDxInnovationThreshold && rcs < rcsThreshold && pNonObstacleRCS > pNonObstacleRCSThreshold;
         },
         action: "Modifies object probabilities"
     },
@@ -128,11 +140,16 @@ const functions = [
             { name: "probHasBeenObservedMoving", type: "number", label: "Probability Has Been Observed Moving (0-1)" },
             { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" },
             { name: "numMicroDopplerCycles", type: "number", label: "Number of Micro Doppler Cycles" },
-            { name: "totalNumCyclesWithOncomingLocations", type: "number", label: "Total Cycles With Oncoming Locations" }
+            { name: "totalNumCyclesWithOncomingLocations", type: "number", label: "Total Cycles With Oncoming Locations" },
+            { name: "probIsCurrentlyMovingThreshold", type: "number", label: "Prob Is Currently Moving Threshold", defaultValue: 0.2 },
+            { name: "probHasBeenObservedMovingThreshold", type: "number", label: "Prob Has Been Observed Moving Threshold", defaultValue: 0.3 },
+            { name: "totalNumSensorUpdatesThreshold", type: "number", label: "Total Num Sensor Updates Threshold", defaultValue: 15 },
+            { name: "numMicroDopplerCyclesThreshold", type: "number", label: "Num Micro Doppler Cycles Threshold", defaultValue: 3 },
+            { name: "totalNumCyclesWithOncomingLocationsThreshold", type: "number", label: "Total Cycles With Oncoming Locations Threshold", defaultValue: 10 }
         ],
         condition: (inputs) => {
-            const { probIsCurrentlyMoving, probHasBeenObservedMoving, totalNumSensorUpdates, numMicroDopplerCycles, totalNumCyclesWithOncomingLocations } = inputs;
-            return probIsCurrentlyMoving < 0.2 && probHasBeenObservedMoving < 0.3 && totalNumSensorUpdates > 15 && numMicroDopplerCycles < 3 && totalNumCyclesWithOncomingLocations > 10;
+            const { probIsCurrentlyMoving, probHasBeenObservedMoving, totalNumSensorUpdates, numMicroDopplerCycles, totalNumCyclesWithOncomingLocations, probIsCurrentlyMovingThreshold, probHasBeenObservedMovingThreshold, totalNumSensorUpdatesThreshold, numMicroDopplerCyclesThreshold, totalNumCyclesWithOncomingLocationsThreshold } = inputs;
+            return probIsCurrentlyMoving < probIsCurrentlyMovingThreshold && probHasBeenObservedMoving < probHasBeenObservedMovingThreshold && totalNumSensorUpdates > totalNumSensorUpdatesThreshold && numMicroDopplerCycles < numMicroDopplerCyclesThreshold && totalNumCyclesWithOncomingLocations > totalNumCyclesWithOncomingLocationsThreshold;
         },
         action: "Disqualifies for VY-dependent functions"
     },
@@ -145,11 +162,15 @@ const functions = [
             { name: "avgDxInnovation", type: "number", label: "Average Dx Innovation" },
             { name: "rcs", type: "number", label: "RCS (Radar Cross Section)" },
             { name: "elevation", type: "number", label: "Elevation (degrees)" },
-            { name: "pNonObstacleRCS", type: "number", label: "P Non-Obstacle RCS (0-1)" }
+            { name: "pNonObstacleRCS", type: "number", label: "P Non-Obstacle RCS (0-1)" },
+            { name: "avgDxInnovationThreshold", type: "number", label: "Avg Dx Innovation Threshold", defaultValue: 1.5 },
+            { name: "rcsThreshold", type: "number", label: "RCS Threshold", defaultValue: -12 },
+            { name: "elevationThreshold", type: "number", label: "Elevation Threshold", defaultValue: -5 },
+            { name: "pNonObstacleRCSThreshold", type: "number", label: "P Non-Obstacle RCS Threshold", defaultValue: 0.6 }
         ],
         condition: (inputs) => {
-            const { hasOnlyBeenUpdatedBySensorX, avgDxInnovation, rcs, elevation, pNonObstacleRCS } = inputs;
-            return hasOnlyBeenUpdatedBySensorX && avgDxInnovation > 1.5 && rcs < -12 && elevation < -5 && pNonObstacleRCS > 0.6;
+            const { hasOnlyBeenUpdatedBySensorX, avgDxInnovation, rcs, elevation, pNonObstacleRCS, avgDxInnovationThreshold, rcsThreshold, elevationThreshold, pNonObstacleRCSThreshold } = inputs;
+            return hasOnlyBeenUpdatedBySensorX && avgDxInnovation > avgDxInnovationThreshold && rcs < rcsThreshold && elevation < elevationThreshold && pNonObstacleRCS > pNonObstacleRCSThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -161,12 +182,15 @@ const functions = [
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
             { name: "isOnlyUpdatedBySensorX", type: "boolean", label: "Is Only Updated By Sensor X?" },
             { name: "stateY", type: "number", label: "State Y Position" },
-            { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" }
+            { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" },
+            { name: "stateYThreshold", type: "number", label: "State Y Threshold", defaultValue: 2.0 },
+            { name: "measurementRatioThreshold", type: "number", label: "Measurement Ratio Threshold", defaultValue: 0.4 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 8 }
         ],
         condition: (inputs) => {
-            const { numCyclesExisting, isOnlyUpdatedBySensorX, stateY, totalNumSensorUpdates } = inputs;
+            const { numCyclesExisting, isOnlyUpdatedBySensorX, stateY, totalNumSensorUpdates, stateYThreshold, measurementRatioThreshold, numCyclesExistingThreshold } = inputs;
             const measurementRatio = totalNumSensorUpdates / numCyclesExisting;
-            return isOnlyUpdatedBySensorX && Math.abs(stateY) > 2.0 && measurementRatio < 0.4 && numCyclesExisting > 8;
+            return isOnlyUpdatedBySensorX && Math.abs(stateY) > stateYThreshold && measurementRatio < measurementRatioThreshold && numCyclesExisting > numCyclesExistingThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -180,11 +204,15 @@ const functions = [
             { name: "expectedVrHighEnough", type: "boolean", label: "Expected VR High Enough?" },
             { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" },
             { name: "numMicroDopplerCycles", type: "number", label: "Number of Micro Doppler Cycles" },
-            { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" }
+            { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
+            { name: "absVelOverGroundThreshold", type: "number", label: "Abs Vel Over Ground Threshold", defaultValue: 1.0 },
+            { name: "totalNumSensorUpdatesThreshold", type: "number", label: "Total Num Sensor Updates Threshold", defaultValue: 10 },
+            { name: "numMicroDopplerCyclesThreshold", type: "number", label: "Num Micro Doppler Cycles Threshold", defaultValue: 2 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 15 }
         ],
         condition: (inputs) => {
-            const { isObjectVru, absVelOverGround, expectedVrHighEnough, totalNumSensorUpdates, numMicroDopplerCycles, numCyclesExisting } = inputs;
-            return isObjectVru && absVelOverGround > 1.0 && expectedVrHighEnough && totalNumSensorUpdates > 10 && numMicroDopplerCycles < 2 && numCyclesExisting > 15;
+            const { isObjectVru, absVelOverGround, expectedVrHighEnough, totalNumSensorUpdates, numMicroDopplerCycles, numCyclesExisting, absVelOverGroundThreshold, totalNumSensorUpdatesThreshold, numMicroDopplerCyclesThreshold, numCyclesExistingThreshold } = inputs;
+            return isObjectVru && absVelOverGround > absVelOverGroundThreshold && expectedVrHighEnough && totalNumSensorUpdates > totalNumSensorUpdatesThreshold && numMicroDopplerCycles < numMicroDopplerCyclesThreshold && numCyclesExisting > numCyclesExistingThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -195,11 +223,13 @@ const functions = [
         inputs: [
             { name: "isOnlyUpdatedBySensorX", type: "boolean", label: "Is Only Updated By Sensor X?" },
             { name: "avgDxInnovation", type: "number", label: "Average Dx Innovation" },
-            { name: "rcs", type: "number", label: "RCS (Radar Cross Section)" }
+            { name: "rcs", type: "number", label: "RCS (Radar Cross Section)" },
+            { name: "avgDxInnovationThreshold", type: "number", label: "Avg Dx Innovation Threshold", defaultValue: 3.0 },
+            { name: "rcsThreshold", type: "number", label: "RCS Threshold", defaultValue: -18 }
         ],
         condition: (inputs) => {
-            const { isOnlyUpdatedBySensorX, avgDxInnovation, rcs } = inputs;
-            return isOnlyUpdatedBySensorX && avgDxInnovation > 3.0 && rcs < -18;
+            const { isOnlyUpdatedBySensorX, avgDxInnovation, rcs, avgDxInnovationThreshold, rcsThreshold } = inputs;
+            return isOnlyUpdatedBySensorX && avgDxInnovation > avgDxInnovationThreshold && rcs < rcsThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -212,11 +242,14 @@ const functions = [
             { name: "elevationIsValid", type: "boolean", label: "Elevation Is Valid?" },
             { name: "elevation", type: "number", label: "Elevation (degrees)" },
             { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
-            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" }
+            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
+            { name: "stateXThreshold", type: "number", label: "State X Threshold", defaultValue: 50 },
+            { name: "elevationThreshold", type: "number", label: "Elevation Threshold", defaultValue: 15 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 5 }
         ],
         condition: (inputs) => {
-            const { stateX, elevationIsValid, elevation, updatesSinceLastSensor, isObjectVru } = inputs;
-            return stateX < 50 && elevationIsValid && elevation > 15 && updatesSinceLastSensor < 5 && !isObjectVru;
+            const { stateX, elevationIsValid, elevation, updatesSinceLastSensor, isObjectVru, stateXThreshold, elevationThreshold, updatesSinceLastSensorThreshold } = inputs;
+            return stateX < stateXThreshold && elevationIsValid && elevation > elevationThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold && !isObjectVru;
         },
         action: "Disqualifies for AEB"
     },
@@ -349,13 +382,19 @@ const functions = [
             { name: "stateY", type: "number", label: "State Y Position" },
             { name: "rcs", type: "number", label: "RCS (Radar Cross Section)" },
             { name: "vyUnreliableAccumulated", type: "number", label: "VY Unreliable Accumulated" },
-            { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" }
+            { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
+            { name: "baseThreshold", type: "number", label: "Base Threshold", defaultValue: 1.5 },
+            { name: "rangeMultiplier", type: "number", label: "Range Multiplier", defaultValue: 100 },
+            { name: "rcsMultiplier", type: "number", label: "RCS Multiplier", defaultValue: 20 },
+            { name: "vyUnreliableMultiplier", type: "number", label: "VY Unreliable Multiplier", defaultValue: 10 },
+            { name: "thresholdComparisonValue", type: "number", label: "Threshold Comparison Value", defaultValue: 2.5 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 5 }
         ],
         condition: (inputs) => {
-            const { stateX, stateY, rcs, vyUnreliableAccumulated, numCyclesExisting } = inputs;
+            const { stateX, stateY, rcs, vyUnreliableAccumulated, numCyclesExisting, baseThreshold, rangeMultiplier, rcsMultiplier, vyUnreliableMultiplier, thresholdComparisonValue, numCyclesExistingThreshold } = inputs;
             const range = Math.sqrt(stateX * stateX + stateY * stateY);
-            const threshold = 1.5 + (range / 100) + (rcs / 20) + (vyUnreliableAccumulated / 10);
-            return threshold > 2.5 && numCyclesExisting > 5;
+            const threshold = baseThreshold + (range / rangeMultiplier) + (rcs / rcsMultiplier) + (vyUnreliableAccumulated / vyUnreliableMultiplier);
+            return threshold > thresholdComparisonValue && numCyclesExisting > numCyclesExistingThreshold;
         },
         action: "Returns Float32 threshold value for dx innovation"
     },
@@ -367,11 +406,13 @@ const functions = [
             { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
             { name: "absVelOverGroundY", type: "number", label: "Absolute Velocity Over Ground Y" },
             { name: "egoYawRate", type: "number", label: "Ego Yaw Rate (rad/s)" },
-            { name: "filterType", type: "select", label: "Filter Type", options: ["CA", "CV", "LA"] }
+            { name: "filterType", type: "select", label: "Filter Type", options: ["CA", "CV", "LA"] },
+            { name: "absVelOverGroundYThreshold", type: "number", label: "Abs Vel Over Ground Y Threshold", defaultValue: 3.0 },
+            { name: "egoYawRateThreshold", type: "number", label: "Ego Yaw Rate Threshold", defaultValue: 0.1 }
         ],
         condition: (inputs) => {
-            const { isObjectVru, absVelOverGroundY, egoYawRate, filterType } = inputs;
-            return isObjectVru && filterType === "LA" && absVelOverGroundY > 3.0 && Math.abs(egoYawRate) < 0.1;
+            const { isObjectVru, absVelOverGroundY, egoYawRate, filterType, absVelOverGroundYThreshold, egoYawRateThreshold } = inputs;
+            return isObjectVru && filterType === "LA" && absVelOverGroundY > absVelOverGroundYThreshold && Math.abs(egoYawRate) < egoYawRateThreshold;
         },
         action: "Disqualifies for AEB and ACC"
     },
@@ -383,12 +424,14 @@ const functions = [
             { name: "badSensorBasedInnoCount", type: "number", label: "Bad Sensor Based Innovation Count" },
             { name: "stateX", type: "number", label: "State X Position" },
             { name: "stateY", type: "number", label: "State Y Position" },
-            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" }
+            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
+            { name: "badSensorBasedInnoCountThreshold", type: "number", label: "Bad Sensor Based Innovation Count Threshold", defaultValue: 5 },
+            { name: "rangeThreshold", type: "number", label: "Range Threshold", defaultValue: 100 }
         ],
         condition: (inputs) => {
-            const { badSensorBasedInnoCount, stateX, stateY, isObjectVru } = inputs;
+            const { badSensorBasedInnoCount, stateX, stateY, isObjectVru, badSensorBasedInnoCountThreshold, rangeThreshold } = inputs;
             const range = Math.sqrt(stateX * stateX + stateY * stateY);
-            return badSensorBasedInnoCount > 5 && range < 100 && !isObjectVru;
+            return badSensorBasedInnoCount > badSensorBasedInnoCountThreshold && range < rangeThreshold && !isObjectVru;
         },
         action: "Disqualifies for AEB"
     },
@@ -399,11 +442,13 @@ const functions = [
         inputs: [
             { name: "isVru", type: "boolean", label: "Is VRU?" },
             { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
-            { name: "videoInvTtc", type: "number", label: "Video Inverse TTC" }
+            { name: "videoInvTtc", type: "number", label: "Video Inverse TTC" },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 5 },
+            { name: "videoInvTtcThreshold", type: "number", label: "Video Inverse TTC Threshold", defaultValue: 0.5 }
         ],
         condition: (inputs) => {
-            const { isVru, updatesSinceLastSensor, videoInvTtc } = inputs;
-            return isVru && updatesSinceLastSensor < 5 && videoInvTtc > 0.5;
+            const { isVru, updatesSinceLastSensor, videoInvTtc, updatesSinceLastSensorThreshold, videoInvTtcThreshold } = inputs;
+            return isVru && updatesSinceLastSensor < updatesSinceLastSensorThreshold && videoInvTtc > videoInvTtcThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -416,11 +461,13 @@ const functions = [
             { name: "filterType", type: "select", label: "Filter Type", options: ["CA", "CV", "LA"] },
             { name: "stateX", type: "number", label: "State X Position" },
             { name: "vyUnreliableAccumulated", type: "number", label: "VY Unreliable Accumulated" },
-            { name: "isVru", type: "boolean", label: "Is VRU?" }
+            { name: "isVru", type: "boolean", label: "Is VRU?" },
+            { name: "stateXThreshold", type: "number", label: "State X Threshold", defaultValue: 60 },
+            { name: "vyUnreliableAccumulatedThreshold", type: "number", label: "VY Unreliable Accumulated Threshold", defaultValue: 5 }
         ],
         condition: (inputs) => {
-            const { vyInconsistent, filterType, stateX, vyUnreliableAccumulated, isVru } = inputs;
-            return isVru && vyInconsistent && filterType === "LA" && stateX < 60 && vyUnreliableAccumulated > 5;
+            const { vyInconsistent, filterType, stateX, vyUnreliableAccumulated, isVru, stateXThreshold, vyUnreliableAccumulatedThreshold } = inputs;
+            return isVru && vyInconsistent && filterType === "LA" && stateX < stateXThreshold && vyUnreliableAccumulated > vyUnreliableAccumulatedThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -433,11 +480,14 @@ const functions = [
             { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
             { name: "isRecentlyUsedVideoHandleValid", type: "boolean", label: "Is Recently Used Video Handle Valid?" },
             { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
-            { name: "absVelOverGround", type: "number", label: "Absolute Velocity Over Ground" }
+            { name: "absVelOverGround", type: "number", label: "Absolute Velocity Over Ground" },
+            { name: "absVelOverGroundThreshold", type: "number", label: "Abs Vel Over Ground Threshold", defaultValue: 0.5 },
+            { name: "probHasBeenObservedMovingThreshold", type: "number", label: "Prob Has Been Observed Moving Threshold", defaultValue: 0.2 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 3 }
         ],
         condition: (inputs) => {
-            const { probHasBeenObservedMoving, updatesSinceLastSensor, isRecentlyUsedVideoHandleValid, isObjectVru, absVelOverGround } = inputs;
-            return isObjectVru && absVelOverGround < 0.5 && probHasBeenObservedMoving < 0.2 && updatesSinceLastSensor < 3 && isRecentlyUsedVideoHandleValid;
+            const { probHasBeenObservedMoving, updatesSinceLastSensor, isRecentlyUsedVideoHandleValid, isObjectVru, absVelOverGround, absVelOverGroundThreshold, probHasBeenObservedMovingThreshold, updatesSinceLastSensorThreshold } = inputs;
+            return isObjectVru && absVelOverGround < absVelOverGroundThreshold && probHasBeenObservedMoving < probHasBeenObservedMovingThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold && isRecentlyUsedVideoHandleValid;
         },
         action: "Disqualifies for AEB"
     },
@@ -450,12 +500,16 @@ const functions = [
             { name: "referencePointY", type: "number", label: "Reference Point Y" },
             { name: "radarBasedInnovation", type: "number", label: "Radar Based Innovation" },
             { name: "videoBasedInnovation", type: "number", label: "Video Based Innovation" },
-            { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" }
+            { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
+            { name: "rangeThreshold", type: "number", label: "Range Threshold", defaultValue: 80 },
+            { name: "radarBasedInnovationThreshold", type: "number", label: "Radar Based Innovation Threshold", defaultValue: 2.0 },
+            { name: "videoBasedInnovationThreshold", type: "number", label: "Video Based Innovation Threshold", defaultValue: 1.5 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 5 }
         ],
         condition: (inputs) => {
-            const { referencePointX, referencePointY, radarBasedInnovation, videoBasedInnovation, updatesSinceLastSensor } = inputs;
+            const { referencePointX, referencePointY, radarBasedInnovation, videoBasedInnovation, updatesSinceLastSensor, rangeThreshold, radarBasedInnovationThreshold, videoBasedInnovationThreshold, updatesSinceLastSensorThreshold } = inputs;
             const range = Math.sqrt(referencePointX * referencePointX + referencePointY * referencePointY);
-            return range < 80 && radarBasedInnovation > 2.0 && videoBasedInnovation > 1.5 && updatesSinceLastSensor < 5;
+            return range < rangeThreshold && radarBasedInnovation > radarBasedInnovationThreshold && videoBasedInnovation > videoBasedInnovationThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold;
         },
         action: "Updates bad sensor innovation counter"
     },
@@ -469,13 +523,17 @@ const functions = [
             { name: "stateY", type: "number", label: "State Y Position" },
             { name: "velocityX", type: "number", label: "Velocity X" },
             { name: "velocityY", type: "number", label: "Velocity Y" },
-            { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" }
+            { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
+            { name: "totalNumSensorUpdatesThreshold", type: "number", label: "Total Num Sensor Updates Threshold", defaultValue: 10 },
+            { name: "rangeThreshold", type: "number", label: "Range Threshold", defaultValue: 120 },
+            { name: "speedThreshold", type: "number", label: "Speed Threshold", defaultValue: 1.0 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 15 }
         ],
         condition: (inputs) => {
-            const { totalNumSensorUpdates, stateX, stateY, velocityX, velocityY, numCyclesExisting } = inputs;
+            const { totalNumSensorUpdates, stateX, stateY, velocityX, velocityY, numCyclesExisting, totalNumSensorUpdatesThreshold, rangeThreshold, speedThreshold, numCyclesExistingThreshold } = inputs;
             const range = Math.sqrt(stateX * stateX + stateY * stateY);
             const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-            return totalNumSensorUpdates > 10 && range > 120 && speed < 1.0 && numCyclesExisting > 15;
+            return totalNumSensorUpdates > totalNumSensorUpdatesThreshold && range > rangeThreshold && speed < speedThreshold && numCyclesExisting > numCyclesExistingThreshold;
         },
         action: "Disqualifies for AEB and ACC"
     },
@@ -486,11 +544,13 @@ const functions = [
         inputs: [
             { name: "absVelOverGround", type: "number", label: "Absolute Velocity Over Ground" },
             { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" },
-            { name: "isOnlyRadarUpdated", type: "boolean", label: "Is Only Radar Updated?" }
+            { name: "isOnlyRadarUpdated", type: "boolean", label: "Is Only Radar Updated?" },
+            { name: "absVelOverGroundThreshold", type: "number", label: "Abs Vel Over Ground Threshold", defaultValue: 0.5 },
+            { name: "totalNumSensorUpdatesThreshold", type: "number", label: "Total Num Sensor Updates Threshold", defaultValue: 8 }
         ],
         condition: (inputs) => {
-            const { absVelOverGround, totalNumSensorUpdates, isOnlyRadarUpdated } = inputs;
-            return absVelOverGround < 0.5 && totalNumSensorUpdates > 8 && isOnlyRadarUpdated;
+            const { absVelOverGround, totalNumSensorUpdates, isOnlyRadarUpdated, absVelOverGroundThreshold, totalNumSensorUpdatesThreshold } = inputs;
+            return absVelOverGround < absVelOverGroundThreshold && totalNumSensorUpdates > totalNumSensorUpdatesThreshold && isOnlyRadarUpdated;
         },
         action: "Disqualifies for AEB and ACC"
     },
@@ -504,12 +564,15 @@ const functions = [
             { name: "probIsCurrentlyMoving", type: "number", label: "Probability Is Currently Moving (0-1)" },
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
             { name: "numSingleUpdateBySensorX", type: "number", label: "Number of Single Update By Sensor X" },
-            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" }
+            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
+            { name: "probHasBeenObservedMovingThreshold", type: "number", label: "Prob Has Been Observed Moving Threshold", defaultValue: 0.2 },
+            { name: "probIsCurrentlyMovingThreshold", type: "number", label: "Prob Is Currently Moving Threshold", defaultValue: 0.1 },
+            { name: "measurementRatioThreshold", type: "number", label: "Measurement Ratio Threshold", defaultValue: 0.3 }
         ],
         condition: (inputs) => {
-            const { filterType, probHasBeenObservedMoving, probIsCurrentlyMoving, numCyclesExisting, numSingleUpdateBySensorX, isObjectVru } = inputs;
+            const { filterType, probHasBeenObservedMoving, probIsCurrentlyMoving, numCyclesExisting, numSingleUpdateBySensorX, isObjectVru, probHasBeenObservedMovingThreshold, probIsCurrentlyMovingThreshold, measurementRatioThreshold } = inputs;
             const measurementRatio = numSingleUpdateBySensorX / numCyclesExisting;
-            return isObjectVru && filterType === "LA" && probHasBeenObservedMoving < 0.2 && probIsCurrentlyMoving < 0.1 && measurementRatio < 0.3;
+            return isObjectVru && filterType === "LA" && probHasBeenObservedMoving < probHasBeenObservedMovingThreshold && probIsCurrentlyMoving < probIsCurrentlyMovingThreshold && measurementRatio < measurementRatioThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -521,11 +584,14 @@ const functions = [
             { name: "stateX", type: "number", label: "State X Position" },
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
             { name: "accelerationX", type: "number", label: "Acceleration X" },
-            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" }
+            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
+            { name: "stateXThreshold", type: "number", label: "State X Threshold", defaultValue: 20 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 10 },
+            { name: "accelerationXThreshold", type: "number", label: "Acceleration X Threshold", defaultValue: 5.0 }
         ],
         condition: (inputs) => {
-            const { stateX, numCyclesExisting, accelerationX, isObjectVru } = inputs;
-            return isObjectVru && stateX < 20 && numCyclesExisting < 10 && accelerationX > 5.0;
+            const { stateX, numCyclesExisting, accelerationX, isObjectVru, stateXThreshold, numCyclesExistingThreshold, accelerationXThreshold } = inputs;
+            return isObjectVru && stateX < stateXThreshold && numCyclesExisting < numCyclesExistingThreshold && accelerationX > accelerationXThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -540,11 +606,16 @@ const functions = [
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
             { name: "filterType", type: "select", label: "Filter Type", options: ["CA", "CV", "LA"] },
             { name: "probHasBeenObservedMoving", type: "number", label: "Probability Has Been Observed Moving (0-1)" },
-            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" }
+            { name: "isObjectVru", type: "boolean", label: "Is Object VRU?" },
+            { name: "stateYThreshold", type: "number", label: "State Y Threshold", defaultValue: 3.0 },
+            { name: "stateXThreshold", type: "number", label: "State X Threshold", defaultValue: 30 },
+            { name: "totalNumSensorUpdatesThreshold", type: "number", label: "Total Num Sensor Updates Threshold", defaultValue: 5 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 15 },
+            { name: "probHasBeenObservedMovingThreshold", type: "number", label: "Prob Has Been Observed Moving Threshold", defaultValue: 0.3 }
         ],
         condition: (inputs) => {
-            const { totalNumSensorUpdates, stateX, stateY, numCyclesExisting, filterType, probHasBeenObservedMoving, isObjectVru } = inputs;
-            return isObjectVru && Math.abs(stateY) > 3.0 && stateX < 30 && totalNumSensorUpdates > 5 && numCyclesExisting < 15 && filterType === "CA" && probHasBeenObservedMoving < 0.3;
+            const { totalNumSensorUpdates, stateX, stateY, numCyclesExisting, filterType, probHasBeenObservedMoving, isObjectVru, stateYThreshold, stateXThreshold, totalNumSensorUpdatesThreshold, numCyclesExistingThreshold, probHasBeenObservedMovingThreshold } = inputs;
+            return isObjectVru && Math.abs(stateY) > stateYThreshold && stateX < stateXThreshold && totalNumSensorUpdates > totalNumSensorUpdatesThreshold && numCyclesExisting < numCyclesExistingThreshold && filterType === "CA" && probHasBeenObservedMoving < probHasBeenObservedMovingThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -559,11 +630,17 @@ const functions = [
             { name: "rcs", type: "number", label: "RCS (Radar Cross Section)" },
             { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" },
             { name: "stationaryLocationsOnlyCounter", type: "number", label: "Stationary Locations Only Counter" },
-            { name: "elevation", type: "number", label: "Elevation (degrees)" }
+            { name: "elevation", type: "number", label: "Elevation (degrees)" },
+            { name: "stateYThreshold", type: "number", label: "State Y Threshold", defaultValue: 4.0 },
+            { name: "numMicroDopplerCyclesThreshold", type: "number", label: "Num Micro Doppler Cycles Threshold", defaultValue: 2 },
+            { name: "rcsThreshold", type: "number", label: "RCS Threshold", defaultValue: 10 },
+            { name: "totalNumSensorUpdatesThreshold", type: "number", label: "Total Num Sensor Updates Threshold", defaultValue: 15 },
+            { name: "stationaryLocationsOnlyCounterThreshold", type: "number", label: "Stationary Locations Only Counter Threshold", defaultValue: 8 },
+            { name: "elevationThreshold", type: "number", label: "Elevation Threshold", defaultValue: 10 }
         ],
         condition: (inputs) => {
-            const { stateY, isObjectPedestrian, numMicroDopplerCycles, rcs, totalNumSensorUpdates, stationaryLocationsOnlyCounter, elevation } = inputs;
-            return isObjectPedestrian && Math.abs(stateY) > 4.0 && numMicroDopplerCycles < 2 && rcs > 10 && totalNumSensorUpdates > 15 && stationaryLocationsOnlyCounter > 8 && elevation > 10;
+            const { stateY, isObjectPedestrian, numMicroDopplerCycles, rcs, totalNumSensorUpdates, stationaryLocationsOnlyCounter, elevation, stateYThreshold, numMicroDopplerCyclesThreshold, rcsThreshold, totalNumSensorUpdatesThreshold, stationaryLocationsOnlyCounterThreshold, elevationThreshold } = inputs;
+            return isObjectPedestrian && Math.abs(stateY) > stateYThreshold && numMicroDopplerCycles < numMicroDopplerCyclesThreshold && rcs > rcsThreshold && totalNumSensorUpdates > totalNumSensorUpdatesThreshold && stationaryLocationsOnlyCounter > stationaryLocationsOnlyCounterThreshold && elevation > elevationThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -578,11 +655,16 @@ const functions = [
             { name: "numMicroDopplerCycles", type: "number", label: "Number of Micro Doppler Cycles" },
             { name: "rcs", type: "number", label: "RCS (Radar Cross Section)" },
             { name: "expectedVrHighEnough", type: "boolean", label: "Expected VR High Enough?" },
-            { name: "stationaryLocationsOnlyCounter", type: "number", label: "Stationary Locations Only Counter" }
+            { name: "stationaryLocationsOnlyCounter", type: "number", label: "Stationary Locations Only Counter" },
+            { name: "stateYThreshold", type: "number", label: "State Y Threshold", defaultValue: 5.0 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 3 },
+            { name: "numMicroDopplerCyclesThreshold", type: "number", label: "Num Micro Doppler Cycles Threshold", defaultValue: 1 },
+            { name: "rcsThreshold", type: "number", label: "RCS Threshold", defaultValue: 15 },
+            { name: "stationaryLocationsOnlyCounterThreshold", type: "number", label: "Stationary Locations Only Counter Threshold", defaultValue: 10 }
         ],
         condition: (inputs) => {
-            const { stateY, updatesSinceLastSensor, isObjectPedestrian, numMicroDopplerCycles, rcs, expectedVrHighEnough, stationaryLocationsOnlyCounter } = inputs;
-            return isObjectPedestrian && Math.abs(stateY) > 5.0 && updatesSinceLastSensor < 3 && numMicroDopplerCycles < 1 && rcs > 15 && !expectedVrHighEnough && stationaryLocationsOnlyCounter > 10;
+            const { stateY, updatesSinceLastSensor, isObjectPedestrian, numMicroDopplerCycles, rcs, expectedVrHighEnough, stationaryLocationsOnlyCounter, stateYThreshold, updatesSinceLastSensorThreshold, numMicroDopplerCyclesThreshold, rcsThreshold, stationaryLocationsOnlyCounterThreshold } = inputs;
+            return isObjectPedestrian && Math.abs(stateY) > stateYThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold && numMicroDopplerCycles < numMicroDopplerCyclesThreshold && rcs > rcsThreshold && !expectedVrHighEnough && stationaryLocationsOnlyCounter > stationaryLocationsOnlyCounterThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -595,11 +677,14 @@ const functions = [
             { name: "dimensionLength", type: "number", label: "Dimension Length" },
             { name: "isObjectCar", type: "boolean", label: "Is Object Car?" },
             { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
-            { name: "isOnlyFrontCenterRadar", type: "boolean", label: "Is Only Front Center Radar?" }
+            { name: "isOnlyFrontCenterRadar", type: "boolean", label: "Is Only Front Center Radar?" },
+            { name: "stateXThreshold", type: "number", label: "State X Threshold", defaultValue: 15 },
+            { name: "dimensionLengthThreshold", type: "number", label: "Dimension Length Threshold", defaultValue: 6.0 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 3 }
         ],
         condition: (inputs) => {
-            const { stateX, dimensionLength, isObjectCar, updatesSinceLastSensor, isOnlyFrontCenterRadar } = inputs;
-            return isObjectCar && stateX < 15 && dimensionLength > 6.0 && updatesSinceLastSensor < 3 && isOnlyFrontCenterRadar;
+            const { stateX, dimensionLength, isObjectCar, updatesSinceLastSensor, isOnlyFrontCenterRadar, stateXThreshold, dimensionLengthThreshold, updatesSinceLastSensorThreshold } = inputs;
+            return isObjectCar && stateX < stateXThreshold && dimensionLength > dimensionLengthThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold && isOnlyFrontCenterRadar;
         },
         action: "Disqualifies for AEB"
     },
@@ -614,11 +699,17 @@ const functions = [
             { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
             { name: "stationaryLocationsOnlyCounter", type: "number", label: "Stationary Locations Only Counter" },
-            { name: "stateX", type: "number", label: "State X Position" }
+            { name: "stateX", type: "number", label: "State X Position" },
+            { name: "elevationThreshold", type: "number", label: "Elevation Threshold", defaultValue: 25 },
+            { name: "rcsThreshold", type: "number", label: "RCS Threshold", defaultValue: -5 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 5 },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 8 },
+            { name: "stationaryLocationsOnlyCounterThreshold", type: "number", label: "Stationary Locations Only Counter Threshold", defaultValue: 5 },
+            { name: "stateXThreshold", type: "number", label: "State X Threshold", defaultValue: 80 }
         ],
         condition: (inputs) => {
-            const { rcs, elevationIsValid, elevation, updatesSinceLastSensor, numCyclesExisting, stationaryLocationsOnlyCounter, stateX } = inputs;
-            return elevationIsValid && elevation > 25 && rcs < -5 && updatesSinceLastSensor < 5 && numCyclesExisting > 8 && stationaryLocationsOnlyCounter > 5 && stateX < 80;
+            const { rcs, elevationIsValid, elevation, updatesSinceLastSensor, numCyclesExisting, stationaryLocationsOnlyCounter, stateX, elevationThreshold, rcsThreshold, updatesSinceLastSensorThreshold, numCyclesExistingThreshold, stationaryLocationsOnlyCounterThreshold, stateXThreshold } = inputs;
+            return elevationIsValid && elevation > elevationThreshold && rcs < rcsThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold && numCyclesExisting > numCyclesExistingThreshold && stationaryLocationsOnlyCounter > stationaryLocationsOnlyCounterThreshold && stateX < stateXThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -631,11 +722,15 @@ const functions = [
             { name: "elevationIsValid", type: "boolean", label: "Elevation Is Valid?" },
             { name: "elevation", type: "number", label: "Elevation (degrees)" },
             { name: "stationaryLocationsOnlyCounter", type: "number", label: "Stationary Locations Only Counter" },
-            { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" }
+            { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
+            { name: "videoBasedInnovationThreshold", type: "number", label: "Video Based Innovation Threshold", defaultValue: 3.0 },
+            { name: "elevationThreshold", type: "number", label: "Elevation Threshold", defaultValue: 30 },
+            { name: "stationaryLocationsOnlyCounterThreshold", type: "number", label: "Stationary Locations Only Counter Threshold", defaultValue: 10 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 4 }
         ],
         condition: (inputs) => {
-            const { videoBasedInnovation, elevationIsValid, elevation, stationaryLocationsOnlyCounter, updatesSinceLastSensor } = inputs;
-            return videoBasedInnovation > 3.0 && elevationIsValid && elevation > 30 && stationaryLocationsOnlyCounter > 10 && updatesSinceLastSensor < 4;
+            const { videoBasedInnovation, elevationIsValid, elevation, stationaryLocationsOnlyCounter, updatesSinceLastSensor, videoBasedInnovationThreshold, elevationThreshold, stationaryLocationsOnlyCounterThreshold, updatesSinceLastSensorThreshold } = inputs;
+            return videoBasedInnovation > videoBasedInnovationThreshold && elevationIsValid && elevation > elevationThreshold && stationaryLocationsOnlyCounter > stationaryLocationsOnlyCounterThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold;
         },
         action: "Disqualifies for AEB"
     },
@@ -648,11 +743,14 @@ const functions = [
             { name: "numCyclesExisting", type: "number", label: "Number of Cycles Existing" },
             { name: "totalNumSensorUpdates", type: "number", label: "Total Number of Sensor Updates" },
             { name: "stationaryLocationsOnlyCounter", type: "number", label: "Stationary Locations Only Counter" },
-            { name: "isCornerRadarDetected", type: "boolean", label: "Is Corner Radar Detected?" }
+            { name: "isCornerRadarDetected", type: "boolean", label: "Is Corner Radar Detected?" },
+            { name: "numCyclesExistingThreshold", type: "number", label: "Num Cycles Existing Threshold", defaultValue: 8 },
+            { name: "totalNumSensorUpdatesThreshold", type: "number", label: "Total Num Sensor Updates Threshold", defaultValue: 5 },
+            { name: "stationaryLocationsOnlyCounterThreshold", type: "number", label: "Stationary Locations Only Counter Threshold", defaultValue: 2 }
         ],
         condition: (inputs) => {
-            const { isObjectVru, numCyclesExisting, totalNumSensorUpdates, stationaryLocationsOnlyCounter, isCornerRadarDetected } = inputs;
-            return isObjectVru && numCyclesExisting < 8 && totalNumSensorUpdates < 5 && stationaryLocationsOnlyCounter > 2 && isCornerRadarDetected;
+            const { isObjectVru, numCyclesExisting, totalNumSensorUpdates, stationaryLocationsOnlyCounter, isCornerRadarDetected, numCyclesExistingThreshold, totalNumSensorUpdatesThreshold, stationaryLocationsOnlyCounterThreshold } = inputs;
+            return isObjectVru && numCyclesExisting < numCyclesExistingThreshold && totalNumSensorUpdates < totalNumSensorUpdatesThreshold && stationaryLocationsOnlyCounter > stationaryLocationsOnlyCounterThreshold && isCornerRadarDetected;
         },
         action: "Disqualifies for AEB"
     },
@@ -665,13 +763,16 @@ const functions = [
             { name: "videoRawAlphaInnovation", type: "number", label: "Video Raw Alpha Innovation" },
             { name: "stateX", type: "number", label: "State X Position" },
             { name: "stateY", type: "number", label: "State Y Position" },
-            { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" }
+            { name: "updatesSinceLastSensor", type: "number", label: "Updates Since Last Sensor" },
+            { name: "alphaDiffThreshold", type: "number", label: "Alpha Diff Threshold", defaultValue: 0.2 },
+            { name: "rangeThreshold", type: "number", label: "Range Threshold", defaultValue: 60 },
+            { name: "updatesSinceLastSensorThreshold", type: "number", label: "Updates Since Last Sensor Threshold", defaultValue: 5 }
         ],
         condition: (inputs) => {
-            const { radarRawAlphaInnovation, videoRawAlphaInnovation, stateX, stateY, updatesSinceLastSensor } = inputs;
+            const { radarRawAlphaInnovation, videoRawAlphaInnovation, stateX, stateY, updatesSinceLastSensor, alphaDiffThreshold, rangeThreshold, updatesSinceLastSensorThreshold } = inputs;
             const range = Math.sqrt(stateX * stateX + stateY * stateY);
             const alphaDiff = Math.abs(radarRawAlphaInnovation - videoRawAlphaInnovation);
-            return alphaDiff > 0.2 && range < 60 && updatesSinceLastSensor < 5;
+            return alphaDiff > alphaDiffThreshold && range < rangeThreshold && updatesSinceLastSensor < updatesSinceLastSensorThreshold;
         },
         action: "Disqualifies for AEB"
     }
@@ -690,6 +791,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('test-all-btn').addEventListener('click', testAllFunctions);
     document.getElementById('reset-all-btn').addEventListener('click', resetAllFunctions);
     document.getElementById('random-values-btn').addEventListener('click', fillRandomValues);
+    document.getElementById('load-defaults-btn').addEventListener('click', loadDefaultThresholds);
 });
 
 function renderFunctionCards() {
@@ -708,6 +810,8 @@ function createFunctionCard(func) {
     card.id = `function-${func.id}`;
     
     const inputsHtml = func.inputs.map(input => {
+        const defaultAttr = input.defaultValue !== undefined ? `value="${input.defaultValue}"` : '';
+        
         if (input.type === 'select') {
             const options = input.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
             return `
@@ -734,7 +838,7 @@ function createFunctionCard(func) {
             return `
                 <div class="input-group">
                     <label for="${func.id}-${input.name}">${input.label}</label>
-                    <input type="number" id="${func.id}-${input.name}" name="${input.name}" step="0.1" placeholder="Enter value">
+                    <input type="number" id="${func.id}-${input.name}" name="${input.name}" step="0.1" ${defaultAttr} placeholder="Enter value">
                 </div>
             `;
         }
@@ -930,6 +1034,19 @@ function fillRandomValues() {
                 const options = input.options;
                 const randomIndex = Math.floor(Math.random() * options.length);
                 element.value = options[randomIndex];
+            }
+        });
+    });
+}
+
+function loadDefaultThresholds() {
+    functions.forEach(func => {
+        func.inputs.forEach(input => {
+            const element = document.getElementById(`${func.id}-${input.name}`);
+            
+            // Load default values for threshold parameters
+            if (input.defaultValue !== undefined) {
+                element.value = input.defaultValue;
             }
         });
     });
