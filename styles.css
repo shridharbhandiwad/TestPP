@@ -121,6 +121,16 @@ header p {
     box-shadow: 0 6px 20px rgba(168, 237, 234, 0.4);
 }
 
+.btn-quaternary {
+    background: linear-gradient(135deg, #d32f2f, #f57c00);
+    color: white;
+}
+
+.btn-quaternary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+}
+
 /* Functions Grid */
 .functions-grid {
     display: grid;
