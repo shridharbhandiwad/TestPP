@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automotive Perception Function Tester</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 Automotive Perception Function Tester</h1>
+            <p>Test each function's conditions to see if they are "hit" (satisfied)</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-label">Total Functions</span>
+                <span class="stat-value" id="total-functions">40</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Functions Hit</span>
+                <span class="stat-value" id="functions-hit">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Success Rate</span>
+                <span class="stat-value" id="success-rate">0%</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="test-all-btn" class="btn btn-primary">Test All Functions</button>
+            <button id="reset-all-btn" class="btn btn-secondary">Reset All</button>
+            <button id="random-values-btn" class="btn btn-tertiary">Fill Random Values</button>
+        </div>
+
+        <div class="functions-grid" id="functions-grid">
+            <!-- Function cards will be populated by JavaScript -->
+        </div>
+
+        <div class="results-summary" id="results-summary">
+            <h3>Test Results Summary</h3>
+            <div class="summary-content">
+                <p>Click "Test All Functions" to see detailed results</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
